@@ -1,0 +1,65 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id                          Int      @id @default(autoincrement())
+  createdAt                   DateTime @default(now())
+  updatedAt                   DateTime @updatedAt
+  firstName                   String   @db.VarChar(55)
+  lastName                    String   @db.VarChar(55)
+  email                       String   @unique
+  password                    String   @db.VarChar(255)
+  isEmailVerified             Boolean  @default(false)
+  isMFAEnabled                Boolean  @default(false)
+  isActive                    Boolean  @default(true)
+  location                    String   @db.VarChar(255)
+  authenticatedPcOrMobileName String   @db.VarChar(255)
+  mfa                         Mfa?
+
+  @@map("users")
+}
+
+model Mfa {
+  id                  Int       @id @default(autoincrement())
+  user                User      @relation(fields: [userId], references: [id])
+  userId              Int       @unique
+  isVerificationPin   Boolean   @default(false)
+  isOtp               Boolean   @default(false)
+  isAuthenticatorApp  Boolean   @default(false)
+  isSecurityQuestion  Boolean   @default(false)
+  isEmailNotification Boolean   @default(false)
+  verificationPin     String?   @db.VarChar(6)
+  question            Question? @relation(fields: [questionsId], references: [id])
+  questionsId         Int?
+  answer              String?   @db.VarChar(255)
+  ascii               String?   @db.VarChar(255)
+  hex                 String?   @db.VarChar(255)
+  base32              String?   @db.VarChar(255)
+  otpauth_url         String?   @db.VarChar(255)
+
+  @@map("mfas")
+}
+
+model Question {
+  id       Int    @id @default(autoincrement())
+  question String @db.VarChar(255)
+  Mfa      Mfa[]
+
+  @@map("questions")
+}
+
+model PhisingData {
+  id        Int      @id @default(autoincrement())
+  username  String   @db.VarChar(255)
+  password  String   @db.VarChar(255)
+  createdAt DateTime @default(now())
+  source    String   @db.VarChar(255)
+
+  @@map("phisingdata")
+}
